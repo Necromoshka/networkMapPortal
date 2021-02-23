@@ -1,0 +1,12 @@
+asgiref==3.3.1
+DateTime==4.3
+Django==3.1.7
+ipaddress==1.0.23
+ply==3.11
+pyasn1==0.4.8
+pycryptodomex==3.10.1
+pysmi==0.3.4
+pysnmp==4.4.12
+pytz==2021.1
+sqlparse==0.4.1
+zope.interface==5.2.0
