@@ -18,6 +18,6 @@ class NetDevice:
         try:
             ip_address(i)
         except ValueError:
-            raise ValueError
+            raise Exception('Не тот ip')
         else:
             self.__ip = i
