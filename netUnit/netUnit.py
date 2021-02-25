@@ -1,5 +1,6 @@
 from .netDevice import *
-from pysnmp.hlapi import *
+from pysnmp.entity.rfc3413.oneliner import cmdgen
+import re
 
 
 class SwitchSnmp(NetDevice):
@@ -11,6 +12,9 @@ class SwitchSnmp(NetDevice):
         self.__port = 161
         self.__oid = '.1.3.6.1.2.1.2.2.1.2'
         self.__varBinds = []
+        self.__cmdGen = cmdgen.CommandGenerator()
+        self.__out = []
+        self.__r = re.compile('Vlan...')
 
     @property
     def community(self):
@@ -20,19 +24,28 @@ class SwitchSnmp(NetDevice):
     def community(self, c):
         self.__community = c
 
-    def __snmp_getcmd(self):
-        return (getCmd(SnmpEngine(),
-                       CommunityData(self.__community),
-                       UdpTransportTarget((super().ip, self.__port)),
-                       ContextData(),
-                       ObjectType(ObjectIdentity(self.__oid))))
+    def __snmp_walk(self):
+        eradication, error_status, error_index, var_bind_table = self.__cmdGen.nextCmd(cmdgen.CommunityData('public'),
+                                                                                       cmdgen.UdpTransportTarget(
+                                                                                           ('192.168.200.26', 161)),
+                                                                                       '.1.3.6.1.2.1.2.2.1.2')
+        if eradication:
+            print(eradication)
+        else:
+            if error_status:
+                print('%s at %s' % (
+                    error_status.prettyPrint(),
+                    error_index and var_bind_table[-1][int(error_index) - 1] or '?'
+                )
+                      )
+            else:
+                for varBindTableRow in var_bind_table:
+                    for name, val in varBindTableRow:
+                        self.__out.append('%s = %s' % (name.prettyPrint(), val.prettyPrint()))
 
-    def __snmp_get_next(self):
-        self.__varBinds = next(self.__snmp_getcmd())
-        return self.__varBinds
-
+        return self.__out
 
     @property
     def sw_port(self):
-        port = 0
-        return port, self.__snmp_get_next()
+        list_re = self.__snmp_walk()
+        return self.__r.findall(str(list_re))
