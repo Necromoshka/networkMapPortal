@@ -10,11 +10,11 @@ class SwitchSnmp(NetDevice):
         self.__community = community
         super().__init__(ip, name)
         self.__port = 161
-        self.__oid = '.1.3.6.1.2.1.2.2.1.2'
+        self.__oid = '.1.3.6.1.2.1.2.2.1.2' #1.3.6.1.2.1.17.4.3.1.1
         self.__varBinds = []
         self.__cmdGen = cmdgen.CommandGenerator()
         self.__out = {}
-        self.__r = re.compile('.*T.*')
+        self.__r = re.compile('([0-9A-Fa-f]{2}[:]){5}[0-9A-Fa-f]{2}')  # .*F.*
 
     @property
     def community(self):
@@ -27,8 +27,8 @@ class SwitchSnmp(NetDevice):
     def __snmp_walk(self):
         eradication, error_status, error_index, var_bind_table = self.__cmdGen.nextCmd(cmdgen.CommunityData('public'),
                                                                                        cmdgen.UdpTransportTarget(
-                                                                                           ('192.168.200.26', 161)),
-                                                                                       '.1.3.6.1.2.1.2.2.1.2')
+                                                                                           ('192.168.200.10', 161)),
+                                                                                       '.1.3.6.1.2.1.17.4.3.1.1')
         if eradication:
             print(eradication)
         else:
@@ -54,5 +54,5 @@ class SwitchSnmp(NetDevice):
             for x in o[z]:
                 st = st + x
             if self.__r.search(st):
-                s.append(st)
+                s.append('%s = %s' % (z, st))
         return s
