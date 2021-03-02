@@ -6,7 +6,7 @@ import re
 class SwitchSnmp(NetDevice):
     """Класс свича"""
 
-    def __init__(self, name, ip, community):
+    def __init__(self, name, ip, community, ret):
         self.__community = community
         super().__init__(ip, name)
         self.__port = 161
@@ -14,7 +14,7 @@ class SwitchSnmp(NetDevice):
         self.__varBinds = []
         self.__cmdGen = cmdgen.CommandGenerator()
         self.__out = {}
-        self.__r = re.compile('([0-9A-Fa-f]{2}[:]){5}[0-9A-Fa-f]{2}')  # .*F.*
+        self.__r = re.compile(ret)  # .*F.*  #([0-9A-Fa-f]{2}[:]){5}[0-9A-Fa-f]{2}
 
     @property
     def community(self):
@@ -25,10 +25,11 @@ class SwitchSnmp(NetDevice):
         self.__community = c
 
     def __snmp_walk(self):
-        eradication, error_status, error_index, var_bind_table = self.__cmdGen.nextCmd(cmdgen.CommunityData('public'),
+        eradication, error_status, error_index, var_bind_table = self.__cmdGen.nextCmd(cmdgen.CommunityData(
+                                                                                               self.__community),
                                                                                        cmdgen.UdpTransportTarget(
-                                                                                           ('192.168.200.10', 161)),
-                                                                                       '.1.3.6.1.2.1.17.4.3.1.1')
+                                                                                           (self.ip, self.__port)),
+                                                                                       self.__oid)
         if eradication:
             print(eradication)
         else:
